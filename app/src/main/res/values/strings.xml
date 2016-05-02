@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Schedule Fetcher</string>
-    <string name="edit_message">Enter smtng</string>
+    <string name="edit_message">Add group</string>
     <string name="button_send">Send</string>
     <string name="button_add">Add</string>
     <string name="button_remove">Remove</string>
@@ -8,4 +8,6 @@
     <string name="title_activity_display_message">My Message</string>
     <string name="action_add_group">Add</string>
     <string name="action_refresh">Refr</string>
+    <string name="groups_storage">com.shklianko.bsuir.schedulefetcher.groups_storage</string>
+    <string name="groups_storage_set_id">groups_storage_set_id</string>
 </resources>

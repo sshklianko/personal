@@ -2,6 +2,7 @@ package com.shklianko.bsuir.schedulefetcher;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -12,16 +13,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
-    public final static String EXTRA_MESSAGE = "wtf????";
+    public final static String EXTRA_MESSAGE = "com.shklianko.bsuir.schedulefetcher.add_message";
+
+    final ArrayList<String> groupsList = new ArrayList<String>();
+    MySimpleArrayAdapter groupsAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,20 +43,21 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         TextView mTitle = (TextView) myToolbar.findViewById(R.id.toolbar_title);
+        mTitle.setText("Manage Groups");
+
+        SharedPreferences sharedPref = this.getSharedPreferences(
+                getString(R.string.groups_storage), Context.MODE_PRIVATE);
+        Set<String> groupsSet =  sharedPref.getStringSet("groups_storage_set_id", null);
+
+        if(groupsSet != null) {
+            for (final String storedGroup : groupsSet) {
+                groupsList.add(storedGroup);
+            }
+        }
 
         final ListView listview = (ListView) findViewById(R.id.grouplistview);
-        String[] values = new String[] { "Android", "iPhone", "WindowsMobile",
-                "Blackberry", "WebOS", "Ubuntu", "Windows7", "Max OS X",
-                "Linux", "OS/2", "Ubuntu", "Windows7", "Max OS X", "Linux",
-                "OS/2", "Ubuntu", "Windows7", "Max OS X", "Linux", "OS/2",
-                "Android", "iPhone", "WindowsMobile" };
-
-        final ArrayList<String> list = new ArrayList<String>();
-        for (int i = 0; i < values.length; ++i) {
-            list.add(values[i]);
-        }
-        final MySimpleArrayAdapter adapter = new MySimpleArrayAdapter(this, list);
-        listview.setAdapter(adapter);
+        groupsAdapter = new MySimpleArrayAdapter(this, groupsList);
+        listview.setAdapter(groupsAdapter);
 
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
@@ -69,40 +79,75 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void sendMessage(View view) {
+    public void selectGroup(View view) {
+        RelativeLayout vwParentRow = (RelativeLayout)view.getParent();
+        TextView child = (TextView)vwParentRow.getChildAt(0);
+
         Intent intent = new Intent(this, DisplayMessageActivity.class);
-        EditText editText = (EditText) findViewById(R.id.edit_message);
-        String message = editText.getText().toString();
-        intent.putExtra(EXTRA_MESSAGE, message);
+        intent.putExtra(EXTRA_MESSAGE, child.getText().toString());
         startActivity(intent);
     }
 
-    // Menu icons are inflated just as they were with actionbar
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.topmenu, menu);
-        return true;
+    public void removeGroup(View view) {
+
+        RelativeLayout vwParentRow = (RelativeLayout)view.getParent();
+        TextView child = (TextView)vwParentRow.getChildAt(0);
+
+        /*int c = Color.CYAN;
+        vwParentRow.setBackgroundColor(c);
+        vwParentRow.refreshDrawableState();*/
+
+        EditText editText = (EditText) findViewById(R.id.edit_message);
+        String groupToRemove = child.getText().toString();
+
+        SharedPreferences sharedPref = this.getSharedPreferences(
+                getString(R.string.groups_storage), Context.MODE_PRIVATE);
+
+        Set<String> groupsSet =  sharedPref.getStringSet("groups_storage_set_id", null);
+
+        for (final String storedGroup : groupsSet) {
+            if (storedGroup.equals(groupToRemove)) {
+                groupsSet.remove( groupToRemove );
+                groupsList.remove( groupToRemove );
+                groupsAdapter.notifyDataSetChanged();
+                editText.setText("");
+
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putStringSet("groups_storage_set_id", groupsSet);
+                editor.commit();
+                return;
+            }
+        }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_add_group:
-                // User chose the "Settings" item, show the app settings UI...
-                return true;
+    public void addGroup(View view) {
 
-            case R.id.action_refresh:
-                // User chose the "Favorite" action, mark the current item
-                // as a favorite...
-                return true;
+        EditText editText = (EditText) findViewById(R.id.edit_message);
+        String group = editText.getText().toString();
 
-            default:
-                // If we got here, the user's action was not recognized.
-                // Invoke the superclass to handle it.
-                return super.onOptionsItemSelected(item);
+        SharedPreferences sharedPref = this.getSharedPreferences(
+                getString(R.string.groups_storage), Context.MODE_PRIVATE);
 
+        Set<String> groupsSet =  sharedPref.getStringSet("groups_storage_set_id", null);
+
+        if(groupsSet != null) {
+            for (final String storedGroup : groupsSet) {
+                if (storedGroup.equals(group)) {
+                    return;
+                }
+            }
+        } else {
+            groupsSet = new HashSet<>();
         }
+
+        groupsSet.add( group );
+        groupsList.add( group );
+        groupsAdapter.notifyDataSetChanged();
+        editText.setText("");
+
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putStringSet("groups_storage_set_id", groupsSet);
+        editor.commit();
     }
 }
 
