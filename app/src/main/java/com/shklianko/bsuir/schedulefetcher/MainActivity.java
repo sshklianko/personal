@@ -7,22 +7,17 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
@@ -30,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
     public final static String EXTRA_MESSAGE = "com.shklianko.bsuir.schedulefetcher.add_message";
 
     final ArrayList<String> groupsList = new ArrayList<String>();
-    MySimpleArrayAdapter groupsAdapter;
+    GroupsArrayAdapter groupsAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         final ListView listview = (ListView) findViewById(R.id.grouplistview);
-        groupsAdapter = new MySimpleArrayAdapter(this, groupsList);
+        groupsAdapter = new GroupsArrayAdapter(this, groupsList);
         listview.setAdapter(groupsAdapter);
 
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -83,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
         RelativeLayout vwParentRow = (RelativeLayout)view.getParent();
         TextView child = (TextView)vwParentRow.getChildAt(0);
 
-        Intent intent = new Intent(this, DisplayMessageActivity.class);
+        Intent intent = new Intent(this, DisplayGroupScheduleActivity.class);
         intent.putExtra(EXTRA_MESSAGE, child.getText().toString());
         startActivity(intent);
     }
@@ -124,38 +119,40 @@ public class MainActivity extends AppCompatActivity {
 
         EditText editText = (EditText) findViewById(R.id.edit_message);
         String group = editText.getText().toString();
+        if(group.trim().length() > 0) {
 
-        SharedPreferences sharedPref = this.getSharedPreferences(
-                getString(R.string.groups_storage), Context.MODE_PRIVATE);
+            SharedPreferences sharedPref = this.getSharedPreferences(
+                    getString(R.string.groups_storage), Context.MODE_PRIVATE);
 
-        Set<String> groupsSet =  sharedPref.getStringSet("groups_storage_set_id", null);
+            Set<String> groupsSet = sharedPref.getStringSet("groups_storage_set_id", null);
 
-        if(groupsSet != null) {
-            for (final String storedGroup : groupsSet) {
-                if (storedGroup.equals(group)) {
-                    return;
+            if (groupsSet != null) {
+                for (final String storedGroup : groupsSet) {
+                    if (storedGroup.equals(group)) {
+                        return;
+                    }
                 }
+            } else {
+                groupsSet = new HashSet<>();
             }
-        } else {
-            groupsSet = new HashSet<>();
+
+            groupsSet.add(group);
+            groupsList.add(group);
+            groupsAdapter.notifyDataSetChanged();
+            editText.setText("");
+
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putStringSet("groups_storage_set_id", groupsSet);
+            editor.commit();
         }
-
-        groupsSet.add( group );
-        groupsList.add( group );
-        groupsAdapter.notifyDataSetChanged();
-        editText.setText("");
-
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putStringSet("groups_storage_set_id", groupsSet);
-        editor.commit();
     }
 }
 
-class MySimpleArrayAdapter extends ArrayAdapter<String> {
+class GroupsArrayAdapter extends ArrayAdapter<String> {
     private final Context context;
     private final ArrayList<String> values;
 
-    public MySimpleArrayAdapter(Context context, ArrayList<String> values) {
+    public GroupsArrayAdapter(Context context, ArrayList<String> values) {
         super(context, -1, values);
         this.context = context;
         this.values = values;

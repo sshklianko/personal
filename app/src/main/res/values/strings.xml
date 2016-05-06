@@ -9,5 +9,6 @@
     <string name="action_add_group">Add</string>
     <string name="action_refresh">Refr</string>
     <string name="groups_storage">com.shklianko.bsuir.schedulefetcher.groups_storage</string>
+    <string name="schedule_storage">com.shklianko.bsuir.schedulefetcher.schedule_storage</string>
     <string name="groups_storage_set_id">groups_storage_set_id</string>
 </resources>
